@@ -69,13 +69,12 @@ jobs:
           OVERWRITE="${{ github.event.inputs.overwrite || 'true' }}"
           if [ "$OVERWRITE" = "true" ]; then
             echo "Cleaning up existing contributions for year $YEAR..."
-            for file in contributions/${YEAR}-*.txt; do
-              if [ -f "$file" ]; then
-                rm "$file"
-                git add -A
-                git commit -m "chore: remove $file" --allow-empty 2>/dev/null || true
-              fi
-            done
+            # 删除该年份的所有贡献文件
+            ls contributions/${YEAR}-*.txt 2>/dev/null && rm -f contributions/${YEAR}-*.txt || true
+            # 提交删除操作
+            git add -A
+            git commit -m "chore: clean contributions for year $YEAR" || echo "No files to clean"
+            echo "Cleaned up."
           fi
           
           # 计算文字总宽度
