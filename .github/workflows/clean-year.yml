@@ -38,15 +38,34 @@ jobs:
           git add -A
           git commit -m "chore: remove year $YEAR contributions" || echo "No files to remove"
           
-          # 使用 git filter-branch 删除该年份的 commit
-          git filter-branch --force --commit-filter '
-            YEAR_PREFIX="'$YEAR'"
-            COMMIT_DATE=$(echo "$GIT_COMMITTER_DATE" | cut -c1-4)
-            if [ "$COMMIT_DATE" = "$YEAR_PREFIX" ]; then
-              skip_commit "$@";
-            else
-              git commit-tree "$@";
-            fi' -- --all
+          # 使用 Python 脚本重写历史
+          python3 -c "
+          import subprocess
+          import sys
+          
+          year = '$YEAR'
+          
+          # 获取所有 commit
+          result = subprocess.run(['git', 'log', '--format=%H %aI', '--reverse'], capture_output=True, text=True)
+          commits = result.stdout.strip().split('\n')
+          
+          # 找出需要保留的 commit
+          keep = []
+          for line in commits:
+              if not line.strip():
+                  continue
+              hash, date = line.split(' ', 1)
+              if not date.startswith(year + '-'):
+                  keep.append(hash)
+          
+          if not keep:
+              print('No commits to keep')
+              sys.exit(0)
+          
+          # 创建新的历史
+          last = keep[-1]
+          subprocess.run(['git', 'reset', '--hard', last], check=True)
+          "
           
           # 强制推送
           git push --force --all
