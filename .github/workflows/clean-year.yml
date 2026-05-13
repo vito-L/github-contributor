@@ -1,0 +1,54 @@
+name: Clean Year
+
+on:
+  workflow_dispatch:
+    inputs:
+      year:
+        description: '要清除的年份'
+        required: true
+        default: '2024'
+
+permissions:
+  contents: write
+
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clean year history
+        run: |
+          YEAR="${{ github.event.inputs.year }}"
+          
+          echo "Cleaning year $YEAR..."
+          
+          # 配置 git
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          
+          # 删除该年份的贡献文件
+          rm -f contributions/${YEAR}-*.txt
+          git add -A
+          git commit -m "chore: remove year $YEAR contributions" || echo "No files to remove"
+          
+          # 使用 git filter-branch 删除该年份的 commit
+          git filter-branch --force --commit-filter '
+            YEAR_PREFIX="'$YEAR'"
+            COMMIT_DATE=$(echo "$GIT_COMMITTER_DATE" | cut -c1-4)
+            if [ "$COMMIT_DATE" = "$YEAR_PREFIX" ]; then
+              skip_commit "$@";
+            else
+              git commit-tree "$@";
+            fi' -- --all
+          
+          # 强制推送
+          git push --force --all
+          
+          echo "Year $YEAR cleaned!"
