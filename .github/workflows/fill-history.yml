@@ -3,10 +3,18 @@ name: Fill History
 on:
   workflow_dispatch:
     inputs:
+      year:
+        description: '目标年份（留空则补最近365天）'
+        required: false
+        default: ''
       days:
-        description: '补多少天的历史（默认365天）'
+        description: '补多少天（仅在未指定年份时生效）'
         required: false
         default: '365'
+      level:
+        description: '颜色深度（1-4，越高越深）'
+        required: false
+        default: '2'
 
 permissions:
   contents: write
@@ -25,36 +33,83 @@ jobs:
 
       - name: Fill history
         run: |
-          # 获取输入参数
-          DAYS=${{ github.event.inputs.days || '365' }}
+          YEAR="${{ github.event.inputs.year }}"
+          DAYS="${{ github.event.inputs.days || '365' }}"
+          LEVEL="${{ github.event.inputs.level || '2' }}"
+          
+          # 根据级别确定每天提交次数
+          case $LEVEL in
+            1) COMMITS=1 ;;
+            2) COMMITS=3 ;;
+            3) COMMITS=5 ;;
+            4) COMMITS=10 ;;
+            *) COMMITS=3 ;;
+          esac
           
           # 配置 git
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           
-          # 生成历史提交
-          for i in $(seq 1 $DAYS); do
-            # 计算日期
-            DATE=$(date -d "-${i} days" '+%Y-%m-%d')
+          if [ -n "$YEAR" ]; then
+            # 指定年份模式：填充整年
+            echo "Filling year $YEAR with level $LEVEL ($COMMITS commits per day)..."
             
-            # 检查是否已有该日期的提交
-            if [ ! -f "contributions/${DATE}.txt" ]; then
-              # 生成随机时间（0-23小时，0-59分钟）
-              HOUR=$(shuf -i 0-23 -n 1)
-              MINUTE=$(shuf -i 0-59 -n 1)
+            # 获取该年份的起止日期
+            START_DATE="${YEAR}-01-01"
+            END_DATE="${YEAR}-12-31"
+            
+            # 生成每一天的提交
+            CURRENT="$START_DATE"
+            while [ "$CURRENT" != "$END_DATE" ] && [ "$CURRENT" \< "$END_DATE" ]; do
+              # 检查文件是否已存在
+              if [ ! -f "contributions/${CURRENT}.txt" ]; then
+                # 生成随机时间
+                HOUR=$(shuf -i 0-23 -n 1)
+                MINUTE=$(shuf -i 0-59 -n 1)
+                
+                # 设置提交时间
+                export GIT_AUTHOR_DATE="${CURRENT}T${HOUR}:${MINUTE}:00"
+                export GIT_COMMITTER_DATE="${CURRENT}T${HOUR}:${MINUTE}:00"
+                
+                # 生成多次提交（控制颜色深度）
+                for (( c=0; c<COMMITS; c++ )); do
+                  echo "Contribution on ${CURRENT}" >> contributions/${CURRENT}.txt
+                  git add .
+                  git commit -m "feat: contribution ${CURRENT}" --allow-empty
+                done
+              fi
               
-              # 创建文件
-              echo "Contribution on ${DATE} ${HOUR}:${MINUTE}" >> contributions/${DATE}.txt
+              # 移到下一天
+              CURRENT=$(date -d "$CURRENT + 1 day" '+%Y-%m-%d')
+            done
+          else
+            # 最近N天模式
+            echo "Filling last $DAYS days with level $LEVEL ($COMMITS commits per day)..."
+            
+            for i in $(seq 1 $DAYS); do
+              DATE=$(date -d "-${i} days" '+%Y-%m-%d')
               
-              # 设置提交时间
-              export GIT_AUTHOR_DATE="${DATE}T${HOUR}:${MINUTE}:00"
-              export GIT_COMMITTER_DATE="${DATE}T${HOUR}:${MINUTE}:00"
-              
-              # 提交
-              git add .
-              git commit -m "feat: contribution ${DATE}"
-            fi
-          done
+              # 检查文件是否已存在
+              if [ ! -f "contributions/${DATE}.txt" ]; then
+                # 生成随机时间
+                HOUR=$(shuf -i 0-23 -n 1)
+                MINUTE=$(shuf -i 0-59 -n 1)
+                
+                # 设置提交时间
+                export GIT_AUTHOR_DATE="${DATE}T${HOUR}:${MINUTE}:00"
+                export GIT_COMMITTER_DATE="${DATE}T${HOUR}:${MINUTE}:00"
+                
+                # 生成多次提交（控制颜色深度）
+                for (( c=0; c<COMMITS; c++ )); do
+                  echo "Contribution on ${DATE}" >> contributions/${DATE}.txt
+                  git add .
+                  git commit -m "feat: contribution ${DATE}" --allow-empty
+                done
+              fi
+            done
+          fi
           
           # 推送
           git push
+          
+          echo "Done!"
