@@ -15,6 +15,10 @@ on:
         description: '贡献级别（1-4，越高越深）'
         required: false
         default: '4'
+      overwrite:
+        description: '是否覆盖该年份已有的贡献（true/false）'
+        required: false
+        default: 'true'
 
 permissions:
   contents: write
@@ -60,6 +64,19 @@ jobs:
           
           # 读取字体配置
           FONT_JSON=$(cat fonts.json)
+          
+          # 如果选择覆盖，删除该年份已有的贡献文件
+          OVERWRITE="${{ github.event.inputs.overwrite || 'true' }}"
+          if [ "$OVERWRITE" = "true" ]; then
+            echo "Cleaning up existing contributions for year $YEAR..."
+            for file in contributions/${YEAR}-*.txt; do
+              if [ -f "$file" ]; then
+                rm "$file"
+                git add -A
+                git commit -m "chore: remove $file" --allow-empty 2>/dev/null || true
+              fi
+            done
+          fi
           
           # 计算文字总宽度
           WIDTH=0
