@@ -1,0 +1,28 @@
+name: Daily Commit
+
+on:
+  schedule:
+    # 每天 UTC 1:00 (北京时间 9:00)
+    - cron: '0 1 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Make commit
+        run: |
+          # 生成今天的日期文件
+          echo "Contribution on $(date '+%Y-%m-%d %H:%M:%S')" >> contributions/$(date '+%Y-%m-%d').txt
+          
+          # 配置 git
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          
+          # 提交
+          git add .
+          git commit -m "feat: contribution $(date '+%Y-%m-%d')" || exit 0
+          git push
