@@ -1,0 +1,54 @@
+name: Fill History
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: '补多少天的历史（默认365天）'
+        required: false
+        default: '365'
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Fill history
+        run: |
+          # 获取输入参数
+          DAYS=${{ github.event.inputs.days || '365' }}
+          
+          # 配置 git
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          
+          # 生成历史提交
+          for i in $(seq 1 $DAYS); do
+            # 计算日期
+            DATE=$(date -d "-${i} days" '+%Y-%m-%d')
+            
+            # 检查是否已有该日期的提交
+            if [ ! -f "contributions/${DATE}.txt" ]; then
+              # 生成随机时间（0-23小时，0-59分钟）
+              HOUR=$(shuf -i 0-23 -n 1)
+              MINUTE=$(shuf -i 0-59 -n 1)
+              
+              # 创建文件
+              echo "Contribution on ${DATE} ${HOUR}:${MINUTE}" >> contributions/${DATE}.txt
+              
+              # 设置提交时间
+              export GIT_AUTHOR_DATE="${DATE}T${HOUR}:${MINUTE}:00"
+              export GIT_COMMITTER_DATE="${DATE}T${HOUR}:${MINUTE}:00"
+              
+              # 提交
+              git add .
+              git commit -m "feat: contribution ${DATE}"
+            fi
+          done
+          
+          # 推送
+          git push

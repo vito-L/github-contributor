@@ -33,6 +33,19 @@ GitHub Actions 会每天自动提交一次，你的热力图会变绿。
 
 进入 Actions 标签，点击 "Daily Commit"，再点击 "Run workflow" 即可手动触发。
 
+### 补历史
+
+进入 Actions 标签，点击 "Fill History"，再点击 "Run workflow" 即可补历史。
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| days | 补多少天 | 365 |
+
+补历史功能会：
+- 生成过去 N 天的提交
+- 每个提交使用随机时间（更真实）
+- 自动跳过已有提交的日期
+
 ### 自定义提交时间
 
 修改 `.github/workflows/commit.yml` 中的 cron 表达式：
