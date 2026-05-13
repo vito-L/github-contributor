@@ -39,8 +39,24 @@ jobs:
             exit 0
           fi
           
+          # 读取配置
+          if [ -f "config.json" ]; then
+            # 获取随机模板
+            TEMPLATES=$(cat config.json | jq -r '.content_templates[]')
+            TEMPLATE=$(echo "$TEMPLATES" | shuf -n 1)
+            
+            # 替换变量
+            CONTENT=$(echo "$TEMPLATE" | sed "s/{date}/$TODAY/g" | sed "s/{time}/$NOW/g")
+            
+            # 获取提交信息模板
+            COMMIT_MSG=$(cat config.json | jq -r '.commit_message' | sed "s/{date}/$TODAY/g")
+          else
+            CONTENT="Contribution on ${TODAY} ${NOW}"
+            COMMIT_MSG="feat: contribution ${TODAY}"
+          fi
+          
           # 创建文件
-          echo "Contribution on ${TODAY} ${NOW}" >> contributions/${TODAY}.txt
+          echo "$CONTENT" >> contributions/${TODAY}.txt
           
           # 配置 git
           git config user.name "${{ github.actor }}"
@@ -48,5 +64,5 @@ jobs:
           
           # 提交
           git add .
-          git commit -m "feat: contribution ${TODAY}"
+          git commit -m "$COMMIT_MSG"
           git push

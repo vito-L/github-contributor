@@ -57,14 +57,24 @@ schedule:
 
 ### 自定义提交内容
 
-修改 `.github/workflows/commit.yml` 中的提交内容：
+修改 `config.json` 文件：
 
-```yaml
-- name: Make commit
-  run: |
-    # 修改这一行来改变提交内容
-    echo "Your custom content" >> contributions/$(date '+%Y-%m-%d').txt
+```json
+{
+  "commit_message": "feat: contribution {date}",
+  "content_templates": [
+    "Contribution on {date} {time}",
+    "Daily commit: {date}",
+    "Another day, another commit: {date}"
+  ],
+  "random_content": true
+}
 ```
+
+| 变量 | 说明 |
+|------|------|
+| {date} | 日期（YYYY-MM-DD） |
+| {time} | 时间（HH:MM:SS） |
 
 ## ⚙️ 配置
 
