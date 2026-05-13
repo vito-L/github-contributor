@@ -2,21 +2,45 @@ name: Daily Commit
 
 on:
   schedule:
-    # 每天 UTC 1:00 (北京时间 9:00)
+    # 每天 UTC 0-23 随机触发（通过多个 cron 实现）
     - cron: '0 1 * * *'
+    - cron: '0 5 * * *'
+    - cron: '0 9 * * *'
+    - cron: '0 13 * * *'
+    - cron: '0 17 * * *'
+    - cron: '0 21 * * *'
   workflow_dispatch:  # 支持手动触发
 
 jobs:
   commit:
     runs-on: ubuntu-latest
+    # 只在随机选择的时间执行
+    if: ${{ github.event_name == 'workflow_dispatch' || (hashFiles('contributions/*.txt') == '' || !contains(hashFiles('contributions/*.txt'), github.run_id)) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Random delay
+        run: |
+          # 随机延迟 0-3600 秒（1小时内）
+          DELAY=$((RANDOM % 3601))
+          echo "Waiting ${DELAY} seconds..."
+          sleep ${DELAY}
+
       - name: Make commit
         run: |
           # 生成今天的日期文件
-          echo "Contribution on $(date '+%Y-%m-%d %H:%M:%S')" >> contributions/$(date '+%Y-%m-%d').txt
+          TODAY=$(date '+%Y-%m-%d')
+          NOW=$(date '+%H:%M:%S')
+          
+          # 检查今天是否已经提交
+          if [ -f "contributions/${TODAY}.txt" ]; then
+            echo "Already committed today, skipping..."
+            exit 0
+          fi
+          
+          # 创建文件
+          echo "Contribution on ${TODAY} ${NOW}" >> contributions/${TODAY}.txt
           
           # 配置 git
           git config user.name "${{ github.actor }}"
@@ -24,5 +48,5 @@ jobs:
           
           # 提交
           git add .
-          git commit -m "feat: contribution $(date '+%Y-%m-%d')" || exit 0
+          git commit -m "feat: contribution ${TODAY}"
           git push
