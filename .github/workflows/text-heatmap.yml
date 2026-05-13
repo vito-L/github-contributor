@@ -68,7 +68,7 @@ jobs:
             if [ "$CHAR" = " " ]; then
               WIDTH=$((WIDTH + 2))
             else
-              CHAR_WIDTH=$(echo "$FONT_JSON" | jq -r ".$CHAR[0]" | wc -c)
+              CHAR_WIDTH=$(echo "$FONT_JSON" | jq -r ".[\"$CHAR\"][0]" | wc -c)
               CHAR_WIDTH=$((CHAR_WIDTH - 1))
               WIDTH=$((WIDTH + CHAR_WIDTH + 1))
             fi
@@ -103,7 +103,7 @@ jobs:
             fi
             
             # 获取字符的像素数据
-            PIXELS=$(echo "$FONT_JSON" | jq -r ".$CHAR // empty")
+            PIXELS=$(echo "$FONT_JSON" | jq -r ".[\"$CHAR\"] // empty | .[]")
             if [ -z "$PIXELS" ]; then
               COL=$((COL + 5))
               continue
