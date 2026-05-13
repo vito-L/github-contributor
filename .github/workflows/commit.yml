@@ -20,8 +20,8 @@ jobs:
 
       - name: Random delay
         run: |
-          # 随机延迟 0-3600 秒（1小时内）
-          DELAY=$((RANDOM % 3601))
+          # 随机延迟 0-300 秒（5分钟内）
+          DELAY=$((RANDOM % 301))
           echo "Waiting ${DELAY} seconds..."
           sleep ${DELAY}
 
