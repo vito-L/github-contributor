@@ -11,6 +11,9 @@ on:
     - cron: '0 21 * * *'
   workflow_dispatch:  # 支持手动触发
 
+permissions:
+  contents: write
+
 jobs:
   commit:
     runs-on: ubuntu-latest
