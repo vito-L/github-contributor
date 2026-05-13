@@ -33,34 +33,34 @@ jobs:
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           
-          # 删除该年份的贡献文件
-          rm -f contributions/${YEAR}-*.txt
-          git add -A
-          git commit -m "chore: remove year $YEAR contributions" || echo "No files to remove"
-          
-          # 获取所有 commit
+          # 获取所有 commit（按时间正序）
           COMMITS=$(git log --format="%H %aI" --reverse)
           
-          # 找出需要删除的 commit
-          DELETE_COMMITS=""
+          # 找出需要保留的 commit（不是指定年份的）
+          KEEP_COMMITS=""
           while IFS= read -r line; do
             if [ -z "$line" ]; then
               continue
             fi
             HASH=$(echo "$line" | cut -d' ' -f1)
             DATE=$(echo "$line" | cut -d' ' -f2)
-            if echo "$DATE" | grep -q "^${YEAR}-"; then
-              DELETE_COMMITS="$DELETE_COMMITS $HASH"
+            # 保留不是指定年份的 commit
+            if ! echo "$DATE" | grep -q "^${YEAR}-"; then
+              KEEP_COMMITS="$KEEP_COMMITS $HASH"
             fi
           done <<< "$COMMITS"
           
-          # 使用 git rebase 删除 commit
-          if [ -n "$DELETE_COMMITS" ]; then
-            echo "Deleting commits: $DELETE_COMMITS"
-            for COMMIT in $DELETE_COMMITS; do
-              git rebase --onto "$COMMIT^" "$COMMIT" || true
-            done
+          if [ -z "$KEEP_COMMITS" ]; then
+            echo "No commits to keep"
+            exit 0
           fi
+          
+          # 获取最后一个需要保留的 commit
+          LAST_KEEP=$(echo "$KEEP_COMMITS" | awk '{print $NF}')
+          echo "Last keep commit: $LAST_KEEP"
+          
+          # 重置到该 commit
+          git reset --hard "$LAST_KEEP"
           
           # 强制推送
           git push --force --all
