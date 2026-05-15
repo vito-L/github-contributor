@@ -1,76 +1,78 @@
 # GitHub Contributor
 
-让 GitHub 热力图每天都是绿色的。
+Keep your GitHub contribution graph green every day.
 
-## ✨ 功能
+> **[中文文档](README_CN.md)**
 
-- 🔄 自动提交 - 每天定时自动提交
-- 📅 补历史 - 指定年份或最近N天，支持颜色深度
+## ✨ Features
 
-## 🚀 快速开始
+- 🔄 **Auto Commit** - Automatic daily commits
+- 📅 **Backfill History** - Fill specific years or recent N days with color depth control
 
-### 1. Fork 本仓库
+## 🚀 Quick Start
 
-点击右上角的 Fork 按钮，将本仓库 Fork 到你的账号下。
+### 1. Fork this repository
 
-### 2. 开启 GitHub Actions
+Click the Fork button in the top right corner to fork this repository to your account.
 
-进入你 Fork 的仓库，点击 Actions 标签，启用 GitHub Actions。
+### 2. Enable GitHub Actions
 
-### 3. 完成
+Go to your forked repository, click the Actions tab, and enable GitHub Actions.
 
-GitHub Actions 会每天自动提交一次，你的热力图会变绿。
+### 3. Done
 
-## 📖 使用方法
+GitHub Actions will automatically commit once a day, and your contribution graph will turn green.
 
-### 自动提交
+## 📖 Usage
 
-默认每天北京时间 9:00 自动提交一次，提交时间会随机延迟（0-5 分钟），更真实。
+### Auto Commit
 
-### 手动触发
+By default, commits are made daily at 9:00 AM Beijing Time (UTC 1:00) with a random delay (0-5 minutes) for a more natural look.
 
-进入 Actions 标签，点击 "Daily Commit"，再点击 "Run workflow" 即可手动触发。
+### Manual Trigger
 
-### 补历史
+Go to the Actions tab, click "Daily Commit", then click "Run workflow" to trigger manually.
 
-进入 Actions 标签，点击 "Fill History"，再点击 "Run workflow" 即可。
+### Backfill History
 
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| year | 目标年份（留空则补最近N天） | - |
-| days | 补多少天（仅在未指定年份时生效） | 365 |
-| level | 颜色深度（1-4） | 2 |
+Go to the Actions tab, click "Fill History", then click "Run workflow".
 
-#### 示例
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| year | Target year (leave empty to backfill recent N days) | - |
+| days | Number of days to backfill (only when year is not specified) | 365 |
+| level | Color depth (1-4) | 2 |
 
-**补最近一年**：
-- year: 留空
+#### Examples
+
+**Backfill last year**:
+- year: (leave empty)
 - days: 365
 - level: 2
 
-**补指定年份**：
+**Backfill specific year**:
 - year: 2023
-- days: 留空
+- days: (leave empty)
 - level: 3
 
-**颜色深度说明**：
-- level 1: 最浅（每天1次提交）
-- level 2: 浅（每天3次提交）
-- level 3: 深（每天5次提交）
-- level 4: 最深（每天10次提交）
+**Color depth levels**:
+- level 1: Lightest (1 commit per day)
+- level 2: Light (3 commits per day)
+- level 3: Dark (5 commits per day)
+- level 4: Darkest (10 commits per day)
 
-### 自定义提交时间
+### Customize Commit Time
 
-修改 `.github/workflows/commit.yml` 中的 cron 表达式：
+Edit the cron expression in `.github/workflows/commit.yml`:
 
 ```yaml
 schedule:
-  - cron: '0 1 * * *'  # UTC 1:00 = 北京时间 9:00
+  - cron: '0 1 * * *'  # UTC 1:00 = Beijing Time 9:00
 ```
 
-### 自定义提交内容
+### Customize Commit Content
 
-修改 `config.json` 文件：
+Edit the `config.json` file:
 
 ```json
 {
@@ -84,17 +86,17 @@ schedule:
 }
 ```
 
-| 变量 | 说明 |
-|------|------|
-| {date} | 日期（YYYY-MM-DD） |
-| {time} | 时间（HH:MM:SS） |
+| Variable | Description |
+|----------|-------------|
+| {date} | Date (YYYY-MM-DD) |
+| {time} | Time (HH:MM:SS) |
 
-## ⚙️ 配置
+## ⚙️ Configuration
 
-| 配置项 | 说明 | 默认值 |
-|--------|------|--------|
-| cron | 提交时间 | 每天 UTC 1:00 |
-| commit_message | 提交信息 | feat: contribution YYYY-MM-DD |
+| Config | Description | Default |
+|--------|-------------|---------|
+| cron | Commit schedule | Daily at UTC 1:00 |
+| commit_message | Commit message | feat: contribution YYYY-MM-DD |
 
 ## 📝 License
 
